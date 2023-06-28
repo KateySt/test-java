@@ -46,12 +46,21 @@ In the main method, an instance of the DependencyContainer dependency container 
 **Execution result example**:
 
 Adding component: ComponentA
+
 Component added: ComponentA
+
 Adding component: ComponentB
+
 Component added: ComponentB
+
 Adding component: ComponentC
+
 ComponentC: Initialized
+
 Component added: ComponentC
+
 Adding component: ComponentD
+
 Component added: ComponentD
+
 ComponentA: doSomething()
