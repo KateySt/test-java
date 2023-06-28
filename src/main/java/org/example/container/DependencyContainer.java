@@ -39,7 +39,8 @@ public class DependencyContainer {
         preAddListeners.forEach(listener -> listener.onComponentAdded(clazz));
 
         try {
-            Constructor<?> constructor = getAutowiredConstructor(clazz);
+            Constructor<?>[] constructors = clazz.getConstructors();
+            Constructor<?> constructor = getAutowiredConstructor(constructors);
             Class<?>[] parameterTypes = constructor.getParameterTypes();
             Object[] parameters = new Object[parameterTypes.length];
 
@@ -49,7 +50,10 @@ public class DependencyContainer {
                 parameters[i] = getInstance(parameterType, qualifier);
             }
 
-            Object instance = constructor.newInstance(parameters);
+            Object instance = clazz.getClassLoader()
+                    .loadClass(clazz.getName())
+                    .getDeclaredConstructor(parameterTypes)
+                    .newInstance(parameters);
             instances.put(clazz, instance);
 
             invokePostConstructMethods(instance);
@@ -62,8 +66,7 @@ public class DependencyContainer {
         circularDependencyCheckSet.remove(clazz);
     }
 
-    private Constructor<?> getAutowiredConstructor(Class<?> clazz) {
-        Constructor<?>[] constructors = clazz.getDeclaredConstructors();
+    private Constructor<?> getAutowiredConstructor(Constructor<?>[] constructors) {
         for (Constructor<?> constructor : constructors) {
             if (constructor.isAnnotationPresent(Autowired.class)) {
                 return constructor;
@@ -74,8 +77,15 @@ public class DependencyContainer {
 
     private Qualifier getQualifierAnnotation(Annotation[] annotations) {
         for (Annotation annotation : annotations) {
-            if (annotation instanceof Qualifier) {
-                return (Qualifier) annotation;
+            if (annotation.annotationType().getName().equals(Qualifier.class.getName())) {
+                try {
+                    Class<?> qualifierClass = annotation.getClass()
+                            .getClassLoader()
+                            .loadClass(annotation.annotationType().getName());
+                    return (Qualifier) qualifierClass.cast(annotation);
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
             }
         }
         return null;
