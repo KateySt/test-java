@@ -87,31 +87,41 @@ public class ComponentD {
 ```
 public class Main {
     public static void main(String[] args) {
-        DependencyContainer container = DependencyContainer.getContext();
-        ComponentA componentA = container.getInstance(ComponentA.class);
+        DependencyContainer container1 = DependencyContainer.getContext();
+        DependencyContainer container2 = DependencyContainer.getContext();
+
+        container1.addPreAddListener(clazz -> System.out.println("Pre-add listener in container 1: " + clazz.getSimpleName()));
+        container1.addPostAddListener(clazz -> System.out.println("Post-add listener in container 1: " + clazz.getSimpleName()));
+
+        container2.addPreAddListener(clazz -> System.out.println("Pre-add listener in container 2: " + clazz.getSimpleName()));
+        container2.addPostAddListener(clazz -> System.out.println("Post-add listener in container 2: " + clazz.getSimpleName()));
+
+        ComponentA componentA = container1.getInstance(ComponentA.class);
         componentA.doSomething();
+        ComponentA componentA2 = container2.getInstance(ComponentA.class);
     }
 }
 ``` 
 
 **Result**:
 
-Adding component: ComponentA
-
-Component added: ComponentA
-
-Adding component: ComponentB
-
-Component added: ComponentB
-
-Adding component: ComponentC
-
+```
+Pre-add listener in container 1: ComponentA
+Pre-add listener in container 2: ComponentA
+Post-add listener in container 1: ComponentA
+Post-add listener in container 2: ComponentA
+Pre-add listener in container 1: ComponentB
+Pre-add listener in container 2: ComponentB
+Post-add listener in container 1: ComponentB
+Post-add listener in container 2: ComponentB
+Pre-add listener in container 1: ComponentC
+Pre-add listener in container 2: ComponentC
 ComponentC: Initialized
-
-Component added: ComponentC
-
-Adding component: ComponentD
-
-Component added: ComponentD
-
+Post-add listener in container 1: ComponentC
+Post-add listener in container 2: ComponentC
+Pre-add listener in container 1: ComponentD
+Pre-add listener in container 2: ComponentD
+Post-add listener in container 1: ComponentD
+Post-add listener in container 2: ComponentD
 ComponentA: doSomething()
+```
