@@ -1,17 +1,45 @@
-package org.example.container;
+package org.example;
 
-import org.example.annotation.*;
+import org.example.annotation.Autowired;
+import org.example.annotation.Component;
+import org.example.annotation.PostConstructor;
+import org.example.annotation.Qualifier;
 import org.example.interfaces.ComponentListener;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.net.JarURLConnection;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.util.*;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 public class DependencyContainer {
+    private final String packagePrefix = this.getClass().getPackage().getName();
     private final Map<Class<?>, Object> instances = new HashMap<>();
     private final Set<Class<?>> circularDependencyCheckSet = new HashSet<>();
-    private final List<ComponentListener> preAddListeners = new ArrayList<>();
-    private final List<ComponentListener> postAddListeners = new ArrayList<>();
+    private final static List<ComponentListener> preAddListeners = new ArrayList<>();
+    private final static List<ComponentListener> postAddListeners = new ArrayList<>();
+
+    private final static DependencyContainer INSTANCE = new DependencyContainer();
+
+    static {
+        try {
+            INSTANCE.addPostAddListener(clazz -> System.out.println("Adding component: " + clazz.getSimpleName()));
+            INSTANCE.addPostAddListener(clazz -> System.out.println("Component added: " + clazz.getSimpleName()));
+            INSTANCE.autoRegisterComponents();
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException("Failed to auto-register components.", e);
+        }
+    }
+
+    public static DependencyContainer getContext() {
+        return INSTANCE;
+    }
 
     public void addPreAddListener(ComponentListener listener) {
         preAddListeners.add(listener);
@@ -132,5 +160,57 @@ public class DependencyContainer {
     private String getComponentName(Class<?> clazz) {
         Component componentAnnotation = clazz.getAnnotation(Component.class);
         return componentAnnotation != null ? clazz.getSimpleName() : null;
+    }
+
+    public void autoRegisterComponents() throws IOException, ClassNotFoundException {
+        String packageName = packagePrefix;
+        String packagePath = packageName.replace('.', '/');
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        Enumeration<URL> resources = classLoader.getResources(packagePath);
+
+        while (resources.hasMoreElements()) {
+            URL resource = resources.nextElement();
+            if (resource.getProtocol().equals("file")) {
+                String directoryPath = URLDecoder.decode(resource.getPath(), "UTF-8");
+                registerComponentsInDirectory(packageName, directoryPath);
+            } else if (resource.getProtocol().equals("jar")) {
+                registerComponentsInJar(packageName, resource);
+            }
+        }
+    }
+
+    private void registerComponentsInDirectory(String packageName, String directoryPath) throws ClassNotFoundException {
+        File directory = new File(directoryPath);
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    String subPackageName = packageName + "." + file.getName();
+                    String subPackagePath = directoryPath + "/" + file.getName();
+                    registerComponentsInDirectory(subPackageName, subPackagePath);
+                } else if (file.isFile() && file.getName().endsWith(".class")) {
+                    String className = file.getName().substring(0, file.getName().length() - 6);
+                    String fullClassName = packageName + "." + className;
+                    Class<?> clazz = Class.forName(fullClassName);
+                    registerComponent(clazz);
+                }
+            }
+        }
+    }
+
+    private void registerComponentsInJar(String packageName, URL jarUrl) throws IOException, ClassNotFoundException {
+        JarURLConnection jarConnection = (JarURLConnection) jarUrl.openConnection();
+        JarFile jarFile = jarConnection.getJarFile();
+        Enumeration<JarEntry> entries = jarFile.entries();
+
+        while (entries.hasMoreElements()) {
+            JarEntry jarEntry = entries.nextElement();
+            String entryName = jarEntry.getName();
+            if (entryName.startsWith(packageName) && entryName.endsWith(".class")) {
+                String className = entryName.substring(0, entryName.length() - 6).replace('/', '.');
+                Class<?> clazz = Class.forName(className);
+                registerComponent(clazz);
+            }
+        }
     }
 }
