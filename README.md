@@ -41,11 +41,60 @@ The following component classes are provided as examples:
 - **ComponentC**: Depends on `ComponentB` and is injected through the constructor. It also has a `@PostConstructor` method.
 - **ComponentD**: Depends on `ComponentB` and is injected through the constructor.
 
-## Main
+## Execution result example
 
-In the `main` method, an instance of the `DependencyContainer` is created. Then, the components (`ComponentA`, `ComponentB`, `ComponentC`, `ComponentD`) are registered with the container. After that, an instance of the `ComponentA` component is obtained from the container, and its `doSomething()` method is called.
+1. Creat components:
 
-**Execution result example**:
+```
+@Component
+public class ComponentA {
+public void doSomething() {
+System.out.println("ComponentA: doSomething()");
+}
+}
+```
+```
+@Component
+public class ComponentB {
+    @Autowired
+    public ComponentB(ComponentA componentA) {
+    }
+}
+```
+```
+@Component
+public class ComponentC {
+    @Autowired
+    public ComponentC(ComponentB componentB) {
+    }
+    @PostConstructor
+    public void init() {
+        System.out.println("ComponentC: Initialized");
+    }
+}
+```
+```
+@Component
+public class ComponentD {
+    @Autowired
+    public ComponentD(ComponentB componentB) {
+    }
+}
+```
+
+2.Main
+
+```
+public class Main {
+    public static void main(String[] args) {
+        DependencyContainer container = DependencyContainer.getContext();
+        ComponentA componentA = container.getInstance(ComponentA.class);
+        componentA.doSomething();
+    }
+}
+``` 
+
+**Result**:
 
 Adding component: ComponentA
 
