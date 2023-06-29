@@ -22,23 +22,21 @@ public class DependencyContainer {
     private final String packagePrefix = this.getClass().getPackage().getName();
     private final Map<Class<?>, Object> instances = new HashMap<>();
     private final Set<Class<?>> circularDependencyCheckSet = new HashSet<>();
-    private final static List<ComponentListener> preAddListeners = new ArrayList<>();
-    private final static List<ComponentListener> postAddListeners = new ArrayList<>();
+    private final  List<ComponentListener> preAddListeners = new ArrayList<>();
+    private final  List<ComponentListener> postAddListeners = new ArrayList<>();
 
-    private final static DependencyContainer INSTANCE = new DependencyContainer();
-
-    static {
+    private DependencyContainer() {
         try {
-            INSTANCE.addPostAddListener(clazz -> System.out.println("Adding component: " + clazz.getSimpleName()));
-            INSTANCE.addPostAddListener(clazz -> System.out.println("Component added: " + clazz.getSimpleName()));
-            INSTANCE.autoRegisterComponents();
+            addPostAddListener(clazz -> System.out.println("Adding component: " + clazz.getSimpleName()));
+            addPostAddListener(clazz -> System.out.println("Component added: " + clazz.getSimpleName()));
+            autoRegisterComponents();
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException("Failed to auto-register components.", e);
         }
     }
 
     public static DependencyContainer getContext() {
-        return INSTANCE;
+        return new DependencyContainer();
     }
 
     public void addPreAddListener(ComponentListener listener) {
