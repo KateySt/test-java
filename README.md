@@ -87,8 +87,8 @@ public class ComponentD {
 ```
 public class Main {
     public static void main(String[] args) {
-        DependencyContainer container1 = DependencyContainer.getContext();
-        DependencyContainer container2 = DependencyContainer.getContext();
+        DependencyContainer container1 = new DependencyContainer();
+        DependencyContainer container2 = new DependencyContainer();
 
         container1.addPreAddListener(clazz -> System.out.println("Pre-add listener in container 1: " + clazz.getSimpleName()));
         container1.addPostAddListener(clazz -> System.out.println("Post-add listener in container 1: " + clazz.getSimpleName()));
@@ -106,22 +106,27 @@ public class Main {
 **Result**:
 
 ```
+Pre-add listener in container 1: Com
+Post-add listener in container 1: Com
 Pre-add listener in container 1: ComponentA
-Pre-add listener in container 2: ComponentA
 Post-add listener in container 1: ComponentA
-Post-add listener in container 2: ComponentA
 Pre-add listener in container 1: ComponentB
-Pre-add listener in container 2: ComponentB
 Post-add listener in container 1: ComponentB
-Post-add listener in container 2: ComponentB
 Pre-add listener in container 1: ComponentC
-Pre-add listener in container 2: ComponentC
 ComponentC: Initialized
 Post-add listener in container 1: ComponentC
-Post-add listener in container 2: ComponentC
 Pre-add listener in container 1: ComponentD
-Pre-add listener in container 2: ComponentD
 Post-add listener in container 1: ComponentD
-Post-add listener in container 2: ComponentD
 ComponentA: doSomething()
+Pre-add listener in container 2: Com
+Post-add listener in container 2: Com
+Pre-add listener in container 2: ComponentA
+Post-add listener in container 2: ComponentA
+Pre-add listener in container 2: ComponentB
+Post-add listener in container 2: ComponentB
+Pre-add listener in container 2: ComponentC
+ComponentC: Initialized
+Post-add listener in container 2: ComponentC
+Pre-add listener in container 2: ComponentD
+Post-add listener in container 2: ComponentD
 ```

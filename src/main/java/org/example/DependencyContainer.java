@@ -26,13 +26,6 @@ public class DependencyContainer {
     private final List<ComponentListener> postAddListeners = new ArrayList<>();
     private boolean autoRegistrationEnabled = false;
 
-    private static class SingletonHolder {
-        private static final DependencyContainer INSTANCE = new DependencyContainer();
-    }
-
-    public static DependencyContainer getContext() {
-        return SingletonHolder.INSTANCE;
-    }
 
     public void addPreAddListener(ComponentListener listener) {
         preAddListeners.add(listener);
