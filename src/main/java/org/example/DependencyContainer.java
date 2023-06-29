@@ -27,7 +27,7 @@ public class DependencyContainer {
 
     private DependencyContainer() {
         try {
-            addPostAddListener(clazz -> System.out.println("Adding component: " + clazz.getSimpleName()));
+            addPreAddListener(clazz -> System.out.println("Adding component: " + clazz.getSimpleName()));
             addPostAddListener(clazz -> System.out.println("Component added: " + clazz.getSimpleName()));
             autoRegisterComponents();
         } catch (IOException | ClassNotFoundException e) {
