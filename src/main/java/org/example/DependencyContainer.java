@@ -22,18 +22,10 @@ public class DependencyContainer {
     private final String packagePrefix = this.getClass().getPackage().getName();
     private final Map<Class<?>, Object> instances = new HashMap<>();
     private final Set<Class<?>> circularDependencyCheckSet = new HashSet<>();
-    private final  List<ComponentListener> preAddListeners = new ArrayList<>();
-    private final  List<ComponentListener> postAddListeners = new ArrayList<>();
+    private final List<ComponentListener> preAddListeners = new ArrayList<>();
+    private final List<ComponentListener> postAddListeners = new ArrayList<>();
+    private boolean autoRegistrationEnabled = false;
 
-    private DependencyContainer() {
-        try {
-            addPreAddListener(clazz -> System.out.println("Adding component: " + clazz.getSimpleName()));
-            addPostAddListener(clazz -> System.out.println("Component added: " + clazz.getSimpleName()));
-            autoRegisterComponents();
-        } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException("Failed to auto-register components.", e);
-        }
-    }
     private static class SingletonHolder {
         private static final DependencyContainer INSTANCE = new DependencyContainer();
     }
@@ -44,10 +36,12 @@ public class DependencyContainer {
 
     public void addPreAddListener(ComponentListener listener) {
         preAddListeners.add(listener);
+        autoRegistrationEnabled = true;
     }
 
     public void addPostAddListener(ComponentListener listener) {
         postAddListeners.add(listener);
+        autoRegistrationEnabled = true;
     }
 
     public void registerComponent(Class<?> clazz) {
@@ -151,6 +145,14 @@ public class DependencyContainer {
     }
 
     public <T> T getInstance(Class<T> clazz) {
+        if (autoRegistrationEnabled) {
+            try {
+                autoRegisterComponents();
+            } catch (IOException | ClassNotFoundException e) {
+                throw new RuntimeException("Failed to auto-register components.", e);
+            }
+            autoRegistrationEnabled = false;
+        }
         Object instance = instances.get(clazz);
         if (instance == null) {
             throw new RuntimeException("Instance not found for class: " + clazz.getName());
