@@ -34,9 +34,12 @@ public class DependencyContainer {
             throw new RuntimeException("Failed to auto-register components.", e);
         }
     }
+    private static class SingletonHolder {
+        private static final DependencyContainer INSTANCE = new DependencyContainer();
+    }
 
     public static DependencyContainer getContext() {
-        return new DependencyContainer();
+        return SingletonHolder.INSTANCE;
     }
 
     public void addPreAddListener(ComponentListener listener) {
