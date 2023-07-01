@@ -140,7 +140,8 @@ public class DependencyContainer {
     public <T> T getInstance(Class<T> clazz) {
         if (autoRegistrationEnabled) {
             try {
-                autoRegisterComponents();
+                ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+                autoRegisterComponents(packagePrefix, classLoader);
             } catch (IOException | ClassNotFoundException e) {
                 throw new RuntimeException("Failed to auto-register components.", e);
             }
@@ -158,19 +159,16 @@ public class DependencyContainer {
         return componentAnnotation != null ? clazz.getSimpleName() : null;
     }
 
-    public void autoRegisterComponents() throws IOException, ClassNotFoundException {
-        String packageName = packagePrefix;
-        String packagePath = packageName.replace('.', '/');
-        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+    public void autoRegisterComponents(String rootPackage, ClassLoader classLoader) throws IOException, ClassNotFoundException {
+        String packagePath = rootPackage.replace('.', '/');
         Enumeration<URL> resources = classLoader.getResources(packagePath);
-
         while (resources.hasMoreElements()) {
             URL resource = resources.nextElement();
             if (resource.getProtocol().equals("file")) {
                 String directoryPath = URLDecoder.decode(resource.getPath(), "UTF-8");
-                registerComponentsInDirectory(packageName, directoryPath);
+                registerComponentsInDirectory(rootPackage, directoryPath);
             } else if (resource.getProtocol().equals("jar")) {
-                registerComponentsInJar(packageName, resource);
+                registerComponentsInJar(rootPackage, resource);
             }
         }
     }
