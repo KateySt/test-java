@@ -116,11 +116,14 @@ public class DependencyContainer {
                     .orElseThrow(() -> new RuntimeException("Dependency not found: " + clazz.getName()));
         }
 
-        return instances.computeIfAbsent(clazz, key -> {
+        Map<Class<?>, Object> instancesCopy = new HashMap<>(instances);
+
+        return instancesCopy.computeIfAbsent(clazz, key -> {
             registerComponent(key);
             return instances.get(key);
         });
     }
+
 
     private void invokePostConstructMethods(Object instance) {
         Class<?> clazz = instance.getClass();
